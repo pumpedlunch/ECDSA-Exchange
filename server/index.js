@@ -19,9 +19,9 @@ for(let i = 1; i < 4; i++) {
   let publicAddress = secp.utils.bytesToHex(
     secp.getPublicKey(
       secp.utils.randomPrivateKey()));
-  //format to Ethereum standard
+  //format address to Ethereum standard
   publicAddress = `0x${publicAddress.substring((publicAddress.length - 41), (publicAddress.length -1))}`
-  //log address and balance
+  //log address and arbitrary balance
   balances[`${publicAddress}`] = i * 50;
 }
 

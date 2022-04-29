@@ -1,18 +1,31 @@
+const secp = require('@noble/secp256k1');
 const express = require('express');
 const app = express();
 const cors = require('cors');
 const port = 3042;
+
 
 // localhost can have cross origin errors
 // depending on the browser you use!
 app.use(cors());
 app.use(express.json());
 
-const balances = {
-  "1": 100,
-  "2": 50,
-  "3": 75,
+
+//generate 3 public keys with balances
+const balances = {};
+
+for(let i = 1; i < 4; i++) {
+  //generate public key in hex
+  let publicAddress = secp.utils.bytesToHex(
+    secp.getPublicKey(
+      secp.utils.randomPrivateKey()));
+  //format to Ethereum standard
+  publicAddress = `0x${publicAddress.substring((publicAddress.length - 41), (publicAddress.length -1))}`
+  //log address and balance
+  balances[`${publicAddress}`] = i * 50;
 }
+
+console.log(balances);
 
 app.get('/balance/:address', (req, res) => {
   const {address} = req.params;

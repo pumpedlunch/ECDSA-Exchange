@@ -15,22 +15,21 @@ app.use(express.json());
 const balances = {};
 
 for(let i = 1; i < 4; i++) {
-  //generate public key in hex
 
-  const privateKey = secp.utils.randomPrivateKey();
+  //generate private & public keys
+  const privateKey = secp.utils.bytesToHex(secp.utils.randomPrivateKey());
   const publicKey = formatPublicKeyToETH(secp.utils.bytesToHex(secp.getPublicKey(privateKey)));
 
-  //save address and arbitrary balance in balances
-  balances[`${publicKey}`] = i * 50;
+  //save public key and arbitrary balance in balances[]
+  balances[publicKey] = i * 50;
 
   //console log out account info
   console.log(`Account #${i}: \n Public Key: ${publicKey} \n Private Key: ${privateKey} \n Balance: ${balances[`${publicKey}`]}`)
 }
 
-console.log(balances);
-
+//function for formating generated public key to ethereum standard
 function formatPublicKeyToETH(publicKey) {
-  return `0x${publicKey.substring((publicKey.length - 41), (publicKey.length -1))}`
+  return `0x${publicKey.slice(publicKey.length - 40)}`
 }
 
 app.get('/balance/:address', (req, res) => {
@@ -41,14 +40,21 @@ app.get('/balance/:address', (req, res) => {
 
 app.post('/send', (req, res) => {
   const {sender, recipient, amount, senderPrivateKey} = req.body;
-  if(formatPublicKeyToETH(secp.getPublicKey(senderPrivateKey)) !== sender) {
+  //derive ethereum formated public key (privateKeyCheck) from provided private key
+  const privateKeyCheck = formatPublicKeyToETH(
+    secp.utils.bytesToHex(
+      secp.getPublicKey(senderPrivateKey)));
+  //compare privateKeycheck matches public key
+  if(privateKeyCheck !== sender) {
     console.log('invalid private key');
     return
   }
+  //verify account has sufficent funds
   if(balances[sender] < amount) {
     console.log('insufficient funds')
     return
   }
+  //transfer tokens
   balances[sender] -= amount;
   balances[recipient] = (balances[recipient] || 0) + +amount;
   res.send({ balance: balances[sender] });

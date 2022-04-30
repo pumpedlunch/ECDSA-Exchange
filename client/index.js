@@ -19,6 +19,7 @@ document.getElementById("transfer-amount").addEventListener('click', () => {
   const sender = document.getElementById("exchange-address").value;
   const amount = document.getElementById("send-amount").value;
   const recipient = document.getElementById("recipient").value;
+  //added sender private key field
   const senderPrivateKey = document.getElementById("sender-private-key").value;
 
   const body = JSON.stringify({

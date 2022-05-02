@@ -14,15 +14,24 @@
         </div>
       </div>
 
-      <div class="send">
-        <h1> Send Amount </h1>
+      <div class="tx">
+        <h1> Generate Tx Hash </h1>
         <input type="text" id="send-amount" placeholder="Send Amount" />
         <input type="text" id="recipient" placeholder="Recipient" />
-        <input type="text" id="sender-private-key" placeholder="Your Private Key" />
-        <div class="button" id="transfer-amount">
-          Transfer Amount
+        <div class="button" id="generate-hash">
+          Generate Tx Hash
+        </div>
+        <div id="tx-hash"></div>
+      </div>
+
+      <div class="signature">
+        <h1> Submit Tx Signature </h1>
+        <input type="text" id="signature" placeholder="Tx Signature" />
+        <div class="button" id="submit-signature">
+          Finalize Tx
         </div>
       </div>
+      
     </div>
   </body>
 </html>

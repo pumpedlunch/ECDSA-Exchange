@@ -14,11 +14,11 @@ app.use(express.json());
 //generate 3 public keys with balances
 const balances = {};
 
-for(let i = 1; i < 4; i++) {
+for (let i = 1; i < 4; i++) {
 
   //generate private & public keys
   const privateKey = secp.utils.bytesToHex(secp.utils.randomPrivateKey());
-  const publicKey = formatPublicKeyToETH(secp.utils.bytesToHex(secp.getPublicKey(privateKey)));
+  const publicKey = secp.utils.bytesToHex(secp.getPublicKey(privateKey));
 
   //save public key and arbitrary balance in balances[]
   balances[publicKey] = i * 50;
@@ -27,39 +27,59 @@ for(let i = 1; i < 4; i++) {
   console.log(`Account #${i}: \n Public Key: ${publicKey} \n Private Key: ${privateKey} \n Balance: ${balances[`${publicKey}`]}`)
 }
 
-//function for formating generated public key to ethereum standard
-function formatPublicKeyToETH(publicKey) {
-  return `0x${publicKey.slice(publicKey.length - 40)}`
-}
-
 app.get('/balance/:address', (req, res) => {
-  const {address} = req.params;
+  const { address } = req.params;
   const balance = balances[address] || 0;
   res.send({ balance });
 });
 
-app.post('/send', (req, res) => {
-  const {sender, recipient, amount, senderPrivateKey} = req.body;
-  //derive ethereum formated public key (privateKeyCheck) from provided private key
-  const privateKeyCheck = formatPublicKeyToETH(
-    secp.utils.bytesToHex(
-      secp.getPublicKey(senderPrivateKey)));
-  //compare privateKeycheck matches public key
-  if(privateKeyCheck !== sender) {
-    console.log('invalid private key');
+app.post('/generateTxHash', (req, res) => {
+  const { sender, recipient, amount } = req.body;
+  //verify valid tx
+  if (!sender || !recipient) {
+    res.send({ message: 'invalid Tx' });
     return
   }
-  //verify account has sufficent funds
-  if(balances[sender] < amount) {
-    console.log('insufficient funds')
+  //verify sufficient funds
+  if (balances[sender] < amount) {
+    res.send({ message: 'invalid funds' });
     return
   }
-  //transfer tokens
-  balances[sender] -= amount;
-  balances[recipient] = (balances[recipient] || 0) + +amount;
-  res.send({ balance: balances[sender] });
+
+  //generate message to be hashed
+  const txMessage = `send ${amount} from: ${sender} to: ${recipient}`;
+
+  //how to clean up this async await function? -----------------
+  async function generateHash() {
+    let txHash = await secp.utils.sha256(txMessage);
+    txHash = secp.utils.bytesToHex(txHash);
+    res.send({ hash: txHash });
+  };
+  generateHash();
+});
+
+app.post('/submitSignature', (req, res) => {
+  const { sender, amount, recipient, txHash, signature } = req.body;
+
+  //verify signature
+  const verify = secp.verify(signature, txHash, sender);
+
+  if (verify) {
+    //transfer tokens
+    balances[sender] -= amount;
+    balances[recipient] = (balances[recipient] || 0) + +amount;
+    res.send({ balance: balances[sender] });
+  } else {
+    res.send({ message: 'Tx failed: invalid signature' });
+  }
 });
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}!`);
 });
+
+//function for formating generated public key to ethereum standard
+//no longer used as secp.verify requires full public address
+/* function formatPublicKeyToETH(publicKey) {
+  return `0x${publicKey.slice(publicKey.length - 40)}`
+} */

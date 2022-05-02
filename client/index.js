@@ -13,30 +13,12 @@ document.getElementById("exchange-address").addEventListener('input', ({ target:
   }).then(({ balance }) => {
     document.getElementById("balance").innerHTML = balance;
   });
+  generateHash();
 });
 
-document.getElementById("generate-hash").addEventListener('click', () => {
-  const sender = document.getElementById("exchange-address").value;
-  const amount = document.getElementById("send-amount").value;
-  const recipient = document.getElementById("recipient").value;
+document.getElementById("send-amount").addEventListener('input', () => generateHash());
+document.getElementById("recipient").addEventListener('input', () => generateHash());
 
-  const body = JSON.stringify({
-    sender, amount, recipient
-  });
-
-  const request = new Request(`${server}/generateTxHash`, { method: 'POST', body });
-
-  fetch(request, { headers: { 'Content-Type': 'application/json' } }).then(response => {
-    return response.json();
-  }).then(({ hash, message }) => {
-    if (hash) {
-      document.getElementById("tx-hash").innerHTML = hash;
-    }
-    if (message) {
-      alert(message);
-    }
-  });
-});
 
 document.getElementById("submit-signature").addEventListener('click', () => {
   const sender = document.getElementById("exchange-address").value;
@@ -61,3 +43,23 @@ document.getElementById("submit-signature").addEventListener('click', () => {
       }
     });
 });
+
+function generateHash() {
+  const sender = document.getElementById("exchange-address").value;
+  const amount = document.getElementById("send-amount").value;
+  const recipient = document.getElementById("recipient").value;
+
+  const body = JSON.stringify({
+    sender, amount, recipient
+  });
+
+  const request = new Request(`${server}/generateTxHash`, { method: 'POST', body });
+
+  fetch(request, { headers: { 'Content-Type': 'application/json' } }).then(response => {
+    return response.json();
+  }).then(({ hash, message }) => {
+    if (hash) {
+      document.getElementById("tx-hash").innerHTML = ` ${hash}`;
+    }
+  });
+}

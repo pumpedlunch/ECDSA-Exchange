@@ -37,12 +37,12 @@ app.post('/generateTxHash', (req, res) => {
   const { sender, recipient, amount } = req.body;
   //verify valid tx
   if (!sender || !recipient) {
-    res.send({ message: 'invalid Tx' });
+    res.send({ hash: 'invalid Tx' });
     return
   }
   //verify sufficient funds
   if (balances[sender] < amount) {
-    res.send({ message: 'invalid funds' });
+    res.send({ hash: 'insufficient funds' });
     return
   }
 

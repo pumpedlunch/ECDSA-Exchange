@@ -49,13 +49,14 @@ app.post('/generateTxHash', (req, res) => {
   //generate message to be hashed
   const txMessage = `send ${amount} from: ${sender} to: ${recipient}`;
 
-  //how to clean up this async await function? -----------------
-  async function generateHash() {
+  (async () => {
+    //generate Tx Hash
     let txHash = await secp.utils.sha256(txMessage);
+    //format Tx Hash to Hex
     txHash = secp.utils.bytesToHex(txHash);
     res.send({ hash: txHash });
-  };
-  generateHash();
+  })();
+
 });
 
 app.post('/submitSignature', (req, res) => {
@@ -78,7 +79,7 @@ app.listen(port, () => {
   console.log(`Listening on port ${port}!`);
 });
 
-//function for formating generated public key to ethereum standard
+//function for formating generated public key to ethereum standard 
 //no longer used as secp.verify requires full public address
 /* function formatPublicKeyToETH(publicKey) {
   return `0x${publicKey.slice(publicKey.length - 40)}`
